@@ -22,11 +22,22 @@ class LightMultiGraph(nx.Graph):
             wt = attr['weight']
         else:
             wt = 1
+        if attr_dict is not None and 'edge_color' in attr_dict:
+            edge_color = attr_dict['edge_color']
+        elif attr is not None and 'edge_color' in attr:
+            edge_color = attr['edge_color']
+        else:
+            edge_color = None
         if self.has_edge(u, v):  # edge already exists
             # print(f'edge ({u}, {v}) exists, {self[u][v]["weight"]}')
             self[u][v]['weight'] += wt
+            if edge_color is not None:
+                self[u][v]['edge_color'] = edge_color
         else:
-            super(LightMultiGraph, self).add_edge(u, v, weight=wt)
+            if edge_color is not None:
+                super(LightMultiGraph, self).add_edge(u, v, weight=wt, edge_color=edge_color)
+            else:
+                super(LightMultiGraph, self).add_edge(u, v, weight=wt)
 
     def copy(self):
         g_copy = LightMultiGraph()
@@ -35,7 +46,10 @@ class LightMultiGraph(nx.Graph):
                 g_copy.add_node(node)
             else:
                 if 'label' in d:  # this keeps the label and the b_deg attributes to the same level
-                    g_copy.add_node(node, label=d['label'])
+                    if 'node_color' in d:
+                        g_copy.add_node(node, label=d['label'], node_color=d['node_color'])
+                    else:
+                        g_copy.add_node(node, label=d['label'])
 
         for e in self.edges(data=True):
             u, v, d = e
