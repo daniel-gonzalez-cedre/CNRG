@@ -33,8 +33,8 @@ def timestamps(filename):
     return
 
 if __name__ == '__main__':
-    filename = 'karate'
-    attribute = 'nodes'
+    filename = 'clique-ring-500-4'
+    attribute = 'edges'
 
     if attribute == 'edges':
         edge_attrs(filename)
