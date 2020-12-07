@@ -21,37 +21,72 @@ from src.MDL import graph_dl
 from src.generate import generate_graph
 
 
-def get_graph(filename='sample') -> LightMultiGraph:
+def get_graph(name='sample', path_input='', path_node_attrs='', path_edge_attrs='', path_timestamps='') -> LightMultiGraph:
     start_time = time()
-    if filename == 'sample':
-        # g = nx.MultiGraph()
-        g = nx.Graph()
-        g.add_edges_from([(1, 2), (1, 3), (1, 5),
-                          (2, 4), (2, 5), (2, 7),
-                          (3, 4), (3, 5),
-                          (4, 5), (4, 9),
-                          (6, 7), (6, 8), (6, 9),
-                          (7, 8), (7, 9),
-                          (8, 9)])
-    elif filename == 'BA':
-        g = nx.barabasi_albert_graph(10, 2, seed=42)
-        # g = nx.MultiGraph(g)
-        g = nx.Graph()
+    if path_input == '':
+        if name == 'sample':
+            # g = nx.MultiGraph()
+            g = nx.Graph()
+            g.add_edges_from([(1, 2), (1, 3), (1, 5),
+                            (2, 4), (2, 5), (2, 7),
+                            (3, 4), (3, 5),
+                            (4, 5), (4, 9),
+                            (6, 7), (6, 8), (6, 9),
+                            (7, 8), (7, 9),
+                            (8, 9)])
+        elif name == 'BA':
+            g = nx.barabasi_albert_graph(10, 2, seed=42)
+            # g = nx.MultiGraph(g)
+            g = nx.Graph()
+        else:
+            g = nx.read_edgelist(f'./src/tmp/{name}.g', nodetype=int, create_using=nx.Graph())
+            g.name = name
+            # g = nx.MultiGraph(g)
+            if not nx.is_connected(g):
+                g = max(nx.connected_component_subgraphs(g), key=len)
+            name = g.name
+            g = nx.convert_node_labels_to_integers(g)
+            g.name = name
     else:
-        g = nx.read_edgelist(f'./src/tmp/{filename}.g', nodetype=int, create_using=nx.Graph())
-        g.name = filename
-        # g = nx.MultiGraph(g)
+        g = nx.read_edgelist(path_input, nodetype=int, create_using=nx.Graph())
         if not nx.is_connected(g):
             g = max(nx.connected_component_subgraphs(g), key=len)
-        name = g.name
-        g = nx.convert_node_labels_to_integers(g)
+        #g = nx.convert_node_labels_to_integers(g)
         g.name = name
+
 
     g_new = LightMultiGraph()
     g_new.add_edges_from(g.edges())
 
+    # a node attribute is a list of "colors"
+    if path_node_attrs != '':
+        node_attrs = {}
+        with open(path_node_attrs) as infile:
+            for line in infile:
+                v, attr = line.strip().replace('\t', ' ').replace(',', ' ').split(' ')
+                node_attrs[int(v)] = [attr]
+        nx.set_node_attributes(g_new, node_attrs, 'node_colors')
+
+    # an edge attribute is a list of "colors"
+    if path_edge_attrs != '':
+        edge_attrs = {}
+        with open(path_edge_attrs) as infile:
+            for line in infile:
+                u, v, attr = line.strip().replace('\t', ' ').replace(',', ' ').split(' ')
+                edge_attrs[(int(u), int(v))] = [attr]
+        nx.set_edge_attributes(g_new, edge_attrs, 'edge_colors')
+
+    # an edge timestamp is a floating-point number
+    if path_timestamps != '':
+        edge_attrs = {}
+        with open(path_timestamps) as infile:
+            for line in infile:
+                u, v, timestamp = line.strip().replace('\t', ' ').replace(',', ' ').split(' ')
+                edge_attrs[(int(u), int(v))] = float(timestamp)
+        nx.set_edge_attributes(g_new, edge_attrs, 'timestamp')
+
     end_time = time() - start_time
-    print(f'Graph: {filename}, n = {g.order():_d}, m = {g.size():_d} read in {round(end_time, 3):_g}s.')
+    print(f'Graph: {name}, n = {g.order():_d}, m = {g.size():_d} read in {round(end_time, 3):_g}s.')
 
     return g_new
 
@@ -120,7 +155,7 @@ def get_grammar(name: str, clustering: str, grammar_type: str, mu: int, \
     Dump the stats
     :return:
     """
-    original_graph = get_graph(name)
+    original_graph = get_graph(name, path_input, path_node_attrs, path_edge_attrs, path_timestamps)
     outdir = 'dumps'
     make_dirs(outdir, name)  # make the directories if needed
 
@@ -199,7 +234,9 @@ def main():
     path_input, path_node_attrs, path_edge_attrs, path_timestamps = args.input, args.nodes, args.edges, args.timestamps
 
     grammar, orig_n = get_grammar(name=name, grammar_type=type, clustering=clustering, mu=mu, \
-                                  path_input, path_node_attrs, path_edge_attrs, path_timestamps)
+                                  path_input=path_input, path_node_attrs=path_node_attrs, \
+                                  path_edge_attrs=path_edge_attrs, path_timestamps=path_timestamps)
+    exit()
     g, rule_ordering = generate_graph(rule_dict=grammar.rule_dict, target_n=orig_n)
     nx.write_edgelist(g, f'{args.outdir}/{name}_CNRG.g', data=False)
 
