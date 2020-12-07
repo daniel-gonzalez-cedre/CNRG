@@ -114,7 +114,8 @@ def make_dirs(outdir: str, name: str) -> None:
     return
 
 
-def get_grammar(name: str, clustering: str, grammar_type: str, mu: int) -> Tuple[VRG, int]:
+def get_grammar(name: str, clustering: str, grammar_type: str, mu: int, \
+                path_input: str, path_node_attrs: str, path_edge_attrs: str, path_timestamps: str) -> Tuple[VRG, int]:
     """
     Dump the stats
     :return:
@@ -159,6 +160,8 @@ def get_grammar(name: str, clustering: str, grammar_type: str, mu: int) -> Tuple
 def parse_args():
     graph_names = [fname[: fname.find('.g')].split('/')[-1]
                    for fname in glob.glob('./src/tmp/*.g')]
+    graph_names += [fname[: fname.find('.g')].split('/')[-1]
+                    for fname in glob.glob('./data/*.g')]
     clustering_algs = ['leiden', 'louvain', 'spectral', 'cond', 'node2vec', 'random']
     grammar_types = ('mu_random', 'mu_level', 'mu_dl', 'mu_level_dl', 'local_dl', 'global_dl')
 
@@ -182,6 +185,10 @@ def parse_args():
     parser.add_argument('-o', '--outdir', help='Name of the output directory', default='output')
 
     parser.add_argument('-n', help='Number of graphs to generate', default=5, type=int)
+    parser.add_argument('-i', '--input', help='Path to custom input file (represented as an edgelist)', default='')
+    parser.add_argument('-N', '--nodes', help='Path to custom node attributes', default='')
+    parser.add_argument('-E', '--edges', help='Path to custom edge attributes', default='')
+    parser.add_argument('-T', '--timestamps', help='Path to edge timestamps', default='')
     return parser.parse_args()
 
 
@@ -189,8 +196,10 @@ def main():
     args = parse_args()
     name, clustering, mode, mu, type, outdir = args.graph, args.clustering, args.boundary, args.mu, \
                                                args.type, args.outdir
+    path_input, path_node_attrs, path_edge_attrs, path_timestamps = args.input, args.nodes, args.edges, args.timestamps
 
-    grammar, orig_n = get_grammar(name=name, grammar_type=type, clustering=clustering, mu=mu)
+    grammar, orig_n = get_grammar(name=name, grammar_type=type, clustering=clustering, mu=mu, \
+                                  path_input, path_node_attrs, path_edge_attrs, path_timestamps)
     g, rule_ordering = generate_graph(rule_dict=grammar.rule_dict, target_n=orig_n)
     nx.write_edgelist(g, f'{args.outdir}/{name}_CNRG.g', data=False)
 
