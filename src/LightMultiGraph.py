@@ -22,20 +22,20 @@ class LightMultiGraph(nx.Graph):
             wt = attr['weight']
         else:
             wt = 1
-        if attr_dict is not None and 'edge_color' in attr_dict:
-            edge_color = attr_dict['edge_color']
-        elif attr is not None and 'edge_color' in attr:
-            edge_color = attr['edge_color']
+        if attr_dict is not None and 'edge_colors' in attr_dict:
+            edge_colors = attr_dict['edge_colors']
+        elif attr is not None and 'edge_colors' in attr:
+            edge_colors = attr['edge_colors']
         else:
-            edge_color = None
+            edge_colors = None
         if self.has_edge(u, v):  # edge already exists
             # print(f'edge ({u}, {v}) exists, {self[u][v]["weight"]}')
             self[u][v]['weight'] += wt
-            if edge_color is not None:
-                self[u][v]['edge_color'] = edge_color
+            if edge_colors is not None:
+                self[u][v]['edge_colors'] = edge_colors
         else:
-            if edge_color is not None:
-                super(LightMultiGraph, self).add_edge(u, v, weight=wt, edge_color=edge_color)
+            if edge_colors is not None:
+                super(LightMultiGraph, self).add_edge(u, v, weight=wt, edge_colors=edge_colors)
             else:
                 super(LightMultiGraph, self).add_edge(u, v, weight=wt)
 
@@ -45,12 +45,12 @@ class LightMultiGraph(nx.Graph):
             if len(d) == 0:  # prevents adding an empty 'attr_dict' dictionary
                 g_copy.add_node(node)
             else:
-                if 'label' in d and 'node_color' in d:  # this keeps the label and the b_deg attributes to the same level
-                    g_copy.add_node(node, label=d['label'], node_color=d['node_color'])
+                if 'label' in d and 'node_colors' in d:  # this keeps the label and the b_deg attributes to the same level
+                    g_copy.add_node(node, label=d['label'], node_colors=d['node_colors'])
                 elif 'label' in d:
                     g_copy.add_node(node, label=d['label'])
-                elif 'node_color' in d:
-                    g_copy.add_node(node, node_color=d['node_color'])
+                elif 'node_colors' in d:
+                    g_copy.add_node(node, node_colors=d['node_colors'])
 
         for e in self.edges(data=True):
             u, v, d = e

@@ -5,6 +5,9 @@ refactored VRG
 import os
 from collections import defaultdict
 
+#from networkx.algorithms import isomorphism
+import networkx.algorithms.isomorphism as iso
+
 import src.full_info as full_info
 import src.no_info as no_info
 import src.part_info as part_info
@@ -71,6 +74,27 @@ class VRG:
 
         for old_rule in self.rule_dict[rule.lhs]:
             if rule == old_rule:  # check for isomorphism
+                g1 = old_rule.graph
+                g2 = rule.graph
+
+                gm = iso.GraphMatcher(old_rule.graph, rule.graph)
+                assert gm.is_isomorphic()
+
+                for old_v, dd in old_rule.graph.nodes(data=True):
+                    v = gm.mapping[old_v]
+                    if 'node_colors' in dd.keys():
+                        old_rule.graph.nodes[old_v]['node_colors'] += rule.graph.nodes[v]['node_colors']
+
+                #for old_v, v in gm.mapping.items():
+                #    if 'node_colors' in old_rule.graph.nodes[old_v].keys() and 'node_colors' in rule.graph.nodes[v].keys():
+                #        old_rule.graph.nodes[old_v]['node_colors'] += rule.graph.nodes[v]['node_colors']
+
+                for old_u, old_v, dd in old_rule.graph.edges(data=True):
+                    u = gm.mapping[old_u]
+                    v = gm.mapping[old_v]
+                    if 'edge_colors' in dd.keys():
+                        old_rule.graph.edges[old_u, old_v]['edge_colors'] += rule.graph.edges[u, v]['edge_colors']
+
                 old_rule.frequency += 1
                 rule.id = old_rule.id
                 return old_rule.id

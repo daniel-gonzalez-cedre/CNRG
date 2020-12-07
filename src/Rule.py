@@ -15,7 +15,7 @@ class BaseRule:
         self.graph = graph  # the right hand side subgraph
         self.level = level  # level of discovery in the tree (the root is at 0)
         self.cost = cost  # the cost of encoding the rule using MDL (in bits)
-        self.frequency = frequency  # frequency of occurence
+        self.frequency = frequency  # frequency of occurrence
         self.id = None
         self.non_terminals = []  # list of non-terminals in the RHS graph
         for node, d in self.graph.nodes(data=True):
@@ -124,7 +124,6 @@ class FullRule(BaseRule):
         internal_node_counter = 'a'
         boundary_node_counter = 0
 
-
         for n in self.internal_nodes:
             mapping[n] = internal_node_counter
             internal_node_counter = chr(ord(internal_node_counter) + 1)
@@ -141,15 +140,20 @@ class FullRule(BaseRule):
         Contracts the RHS such that all boundary nodes with degree 1 are replaced by a special boundary isolated node I
         """
         iso_nodes = set()
-        for node in self.graph.nodes():
+        for node, dd in self.graph.nodes(data=True):
             if node not in self.internal_nodes and self.graph.degree(node) == 1:  # identifying the isolated nodes
-                iso_nodes.add(node)
+                iso_nodes.add((node, dd))
 
+        print('hello')
+        exit()
         if len(iso_nodes) == 0:  # the rule cannot be contracted
             self.generalize_rhs()
             return
 
         rhs_copy = nx.Graph(self.graph)
+        for v in rhs_copy(data=True):
+            print(v)
+        exit()
 
         for iso_node in iso_nodes:
             for u in rhs_copy.neighbors(iso_node):
