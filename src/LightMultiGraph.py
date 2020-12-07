@@ -45,11 +45,12 @@ class LightMultiGraph(nx.Graph):
             if len(d) == 0:  # prevents adding an empty 'attr_dict' dictionary
                 g_copy.add_node(node)
             else:
-                if 'label' in d:  # this keeps the label and the b_deg attributes to the same level
-                    if 'node_color' in d:
-                        g_copy.add_node(node, label=d['label'], node_color=d['node_color'])
-                    else:
-                        g_copy.add_node(node, label=d['label'])
+                if 'label' in d and 'node_color' in d:  # this keeps the label and the b_deg attributes to the same level
+                    g_copy.add_node(node, label=d['label'], node_color=d['node_color'])
+                elif 'label' in d:
+                    g_copy.add_node(node, label=d['label'])
+                elif 'node_color' in d:
+                    g_copy.add_node(node, node_color=d['node_color'])
 
         for e in self.edges(data=True):
             u, v, d = e
