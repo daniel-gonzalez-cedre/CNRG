@@ -62,8 +62,13 @@ def create_rule(subtree: Set[int], g: LightMultiGraph, mode: str) -> Tuple[PartR
     if mode == 'full':  # in the full information case, we add the boundary edges to the RHS and contract it
         rule = FullRule(lhs=len(boundary_edges), internal_nodes=subtree, graph=sg)
 
-        for u, v, dd in boundary_edges:
-            rule.graph.add_edge(u, v, attr_dict=dd, b=True)
+        for bdry in boundary_edges:
+            if len(bdry) == 2:
+                u, v = bdry
+                rule.graph.add_edge(u, v, b=True)
+            elif len(bdry) == 3:
+                u, v, dd = bdry
+                rule.graph.add_edge(u, v, attr_dict=dd, b=True)
 
         rule.contract_rhs()  # contract and generalize
 
@@ -109,12 +114,21 @@ def compress_graph(g: LightMultiGraph, subtree: Set[int], boundary_edges: Any, p
     g.add_node(new_node, label=len(boundary_edges))
 
     # step 3: rewire new_node
-    for u, v, d in boundary_edges:
-        if u in subtree:
-            u = new_node
-        if v in subtree:
-            v = new_node
-        g.add_edge(u, v, d)
+    for bdry in boundary_edges:
+        if len(bdry) == 2:
+            u, v = bdry
+            if u in subtree:
+                u = new_node
+            if v in subtree:
+                v = new_node
+            g.add_edge(u, v)
+        elif len(bdry) == 3:
+            u, v, d = bdry
+            if u in subtree:
+                u = new_node
+            if v in subtree:
+                v = new_node
+            g.add_edge(u, v, d)
 
     if not permanent:  # if this flag is set, then return the graph dl of the compressed graph and undo the changes
         compressed_graph_dl = graph_dl(g)

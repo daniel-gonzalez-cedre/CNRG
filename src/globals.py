@@ -17,7 +17,11 @@ def find_boundary_edges(g, nbunch):
     for u in nbunch:
         for v in g.neighbors(u):
             if v not in nbunch:
-                edges = [(u, v, {'edge_colors': g.edges[u, v]['edge_colors']})] * g.number_of_edges(u, v)
+                d = g.edges[u, v]
+                if 'edge_colors' in d.keys():
+                    edges = [(u, v, {'edge_colors': d['edge_colors']})] * g.number_of_edges(u, v)
+                else:
+                    edges = [(u, v)] * g.number_of_edges(u, v)
                 boundary_edges.extend(edges)
     return boundary_edges
 

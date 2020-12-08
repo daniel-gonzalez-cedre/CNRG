@@ -16,6 +16,8 @@ class LightMultiGraph(nx.Graph):
 
     def add_edge(self, u, v, attr_dict=None, **attr):
         # print(f'inside add_edge {u}, {v}')
+        edge_colors = None
+        edge_color = None
         if attr_dict is not None and 'weight' in attr_dict:
             wt = attr_dict['weight']
         elif attr is not None and 'weight' in attr:
@@ -26,16 +28,22 @@ class LightMultiGraph(nx.Graph):
             edge_colors = attr_dict['edge_colors']
         elif attr is not None and 'edge_colors' in attr:
             edge_colors = attr['edge_colors']
-        else:
-            edge_colors = None
+        elif attr_dict is not None and 'edge_color' in attr_dict:
+            edge_color = attr_dict['edge_color']
+        elif attr is not None and 'edge_color' in attr:
+            edge_color = attr['edge_color']
         if self.has_edge(u, v):  # edge already exists
             # print(f'edge ({u}, {v}) exists, {self[u][v]["weight"]}')
             self[u][v]['weight'] += wt
             if edge_colors is not None:
-                self[u][v]['edge_colors'] = edge_colors
+                self[u][v]['edge_colors'] += edge_colors
+            if edge_color is not None:
+                self[u][v]['edge_color'] = edge_color
         else:
             if edge_colors is not None:
                 super(LightMultiGraph, self).add_edge(u, v, weight=wt, edge_colors=edge_colors)
+            elif edge_color is not None:
+                super(LightMultiGraph, self).add_edge(u, v, weight=wt, edge_color=edge_color)
             else:
                 super(LightMultiGraph, self).add_edge(u, v, weight=wt)
 
@@ -68,7 +76,10 @@ class LightMultiGraph(nx.Graph):
             else:
                 raise nx.NetworkXError(
                     "Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
-            self.add_edge(u, v, attr_dict=dd, **attr)
+            if attr_dict is not None:
+                self.add_edge(u, v, attr_dict={**dd, **attr_dict}, **attr)
+            else:
+                self.add_edge(u, v, attr_dict=dd, **attr)
 
     def number_of_edges(self, u=None, v=None):
         if u is None:

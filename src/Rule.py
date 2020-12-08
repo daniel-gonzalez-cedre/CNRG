@@ -144,16 +144,11 @@ class FullRule(BaseRule):
             if node not in self.internal_nodes and self.graph.degree(node) == 1:  # identifying the isolated nodes
                 iso_nodes.add((node, dd))
 
-        print('hello')
-        exit()
         if len(iso_nodes) == 0:  # the rule cannot be contracted
             self.generalize_rhs()
             return
 
         rhs_copy = nx.Graph(self.graph)
-        for v in rhs_copy(data=True):
-            print(v)
-        exit()
 
         for iso_node in iso_nodes:
             for u in rhs_copy.neighbors(iso_node):

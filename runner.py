@@ -236,9 +236,33 @@ def main():
     grammar, orig_n = get_grammar(name=name, grammar_type=type, clustering=clustering, mu=mu, \
                                   path_input=path_input, path_node_attrs=path_node_attrs, \
                                   path_edge_attrs=path_edge_attrs, path_timestamps=path_timestamps)
-    exit()
     g, rule_ordering = generate_graph(rule_dict=grammar.rule_dict, target_n=orig_n)
-    nx.write_edgelist(g, f'{args.outdir}/{name}_CNRG.g', data=False)
+
+    #for e in g.edges(data=True):
+    #    print(e)
+
+    try:
+        os.mkdir(args.outdir)
+    except FileExistsError as e:
+        pass
+
+    #nx.write_edgelist(g, f'{args.outdir}/{name}_CNRG.edges', data=False)
+
+    with open(f'{args.outdir}/{name}_CNRG.edges', 'w') as edgefile:
+        for u, v, dd in g.edges(data=True):
+            if 'edge_color' in dd.keys():
+                edgefile.write(f'{u} {v} {dd["edge_color"]}\n')
+            else:
+                edgefile.write(f'{u} {v}\n')
+        edgefile.truncate(edgefile.tell() - len(os.linesep))
+
+    with open(f'{args.outdir}/{name}_CNRG.nodes', 'w') as nodefile:
+        for v, dd in g.nodes(data=True):
+            if 'node_color' in dd.keys():
+                nodefile.write(f'{v} {dd["node_color"]}\n')
+            else:
+                nodefile.write(f'{v}\n')
+        nodefile.truncate(nodefile.tell() - len(os.linesep))
 
 
 if __name__ == '__main__':

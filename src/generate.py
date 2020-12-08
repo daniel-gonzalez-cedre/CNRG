@@ -56,6 +56,7 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
 
     while len(non_terminals) > 0:  # continue until no more non-terminal nodes
         if new_g.order() > upper_bound:  # early stopping
+            print(upper_bound)
             return None, None
 
         node_sample = random.sample(non_terminals, 1)[0]  # choose a non terminal node at random
@@ -91,10 +92,18 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
                 non_terminals.add(new_node)
                 label = d['label']
 
-            if label is None:
+            node_color = None
+            if 'node_colors' in d.keys():
+                node_color = random.sample(d['node_colors'], 1)[0]
+
+            if label is None and node_color is None:
                 new_g.add_node(new_node, b_deg=d['b_deg'])
-            else:
+            elif label is not None and node_color is None:
                 new_g.add_node(new_node, b_deg=d['b_deg'], label=label)
+            elif label is None and node_color is not None:
+                new_g.add_node(new_node, b_deg=d['b_deg'], node_color=node_color)
+            else:
+                new_g.add_node(new_node, b_deg=d['b_deg'], label=label, node_color=node_color)
             node_counter += 1
 
         # randomly assign broken edges to boundary edges
@@ -108,7 +117,7 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
 
             assert len(broken_edges) >= num_boundary_edges
 
-            edge_candidates = broken_edges[: num_boundary_edges]  # picking the first num_broken edges
+            edge_candidates = broken_edges[:num_boundary_edges]  # picking the first batch of broken edges
             broken_edges = broken_edges[num_boundary_edges:]  # removing them from future consideration
 
             for u, v in edge_candidates:  # each edge is either (node_sample, v) or (u, node_sample)
@@ -120,9 +129,16 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
                 new_g.add_edge(u, v)
 
         # adding the rhs to the new graph
-        for u, v in rhs.graph.edges():
-            edge_multiplicity = rhs.graph[u][v]['weight']  #
-            new_g.add_edge(nodes[u], nodes[v], weight=edge_multiplicity)
+        for u, v, d in rhs.graph.edges(data=True):
+            #edge_multiplicity = rhs.graph[u][v]['weight']  #
+            edge_multiplicity = d['weight']
+            if 'edge_colors' in d.keys():
+                edge_color = random.sample(d['edge_colors'], 1)[0]
+                new_g.add_edge(nodes[u], nodes[v], weight=edge_multiplicity, edge_color=edge_color)
+                #for e in new_g.edges(data=True):
+                #    print(e)
+            else:
+                new_g.add_edge(nodes[u], nodes[v], weight=edge_multiplicity)
             logging.debug(f'adding RHS internal edge ({nodes[u]}, {nodes[v]}) wt: {edge_multiplicity}')
 
     return new_g, rule_ordering
