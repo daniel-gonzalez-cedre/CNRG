@@ -20,6 +20,8 @@ def find_boundary_edges(g, nbunch):
                 d = g.edges[u, v]
                 if 'edge_colors' in d.keys():
                     edges = [(u, v, {'edge_colors': d['edge_colors']})] * g.number_of_edges(u, v)
+                elif 'edge_color' in d.keys():
+                    edges = [(u, v, {'edge_color': d['edge_color']})] * g.number_of_edges(u, v)
                 else:
                     edges = [(u, v)] * g.number_of_edges(u, v)
                 boundary_edges.extend(edges)

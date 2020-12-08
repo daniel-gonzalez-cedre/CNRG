@@ -56,7 +56,6 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
 
     while len(non_terminals) > 0:  # continue until no more non-terminal nodes
         if new_g.order() > upper_bound:  # early stopping
-            print(upper_bound)
             return None, None
 
         node_sample = random.sample(non_terminals, 1)[0]  # choose a non terminal node at random
@@ -120,13 +119,20 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
             edge_candidates = broken_edges[:num_boundary_edges]  # picking the first batch of broken edges
             broken_edges = broken_edges[num_boundary_edges:]  # removing them from future consideration
 
-            for u, v in edge_candidates:  # each edge is either (node_sample, v) or (u, node_sample)
+            for e in edge_candidates:  # each edge is either (node_sample, v) or (u, node_sample)
+                if len(e) == 2:
+                    u, v = e
+                else:
+                    u, v, d = e
                 if u == node_sample:
                     u = nodes[n]
                 else:
                     v = nodes[n]
                 logging.debug(f'adding broken edge ({u}, {v})')
-                new_g.add_edge(u, v)
+                if len(e) == 2:
+                    new_g.add_edge(u, v)
+                else:
+                    new_g.add_edge(u, v, attr_dict=d)
 
         # adding the rhs to the new graph
         for u, v, d in rhs.graph.edges(data=True):
@@ -135,8 +141,6 @@ def _generate_graph(rule_dict: Dict[int, List[PartRule]], upper_bound: int) -> A
             if 'edge_colors' in d.keys():
                 edge_color = random.sample(d['edge_colors'], 1)[0]
                 new_g.add_edge(nodes[u], nodes[v], weight=edge_multiplicity, edge_color=edge_color)
-                #for e in new_g.edges(data=True):
-                #    print(e)
             else:
                 new_g.add_edge(nodes[u], nodes[v], weight=edge_multiplicity)
             logging.debug(f'adding RHS internal edge ({nodes[u]}, {nodes[v]}) wt: {edge_multiplicity}')
