@@ -1,3 +1,5 @@
 .idea/*
 .DS_Store
 .*.swp
+src/__pycache__
+output
